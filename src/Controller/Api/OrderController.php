@@ -18,7 +18,7 @@ class OrderController extends AbstractController
         private OrderService $orderService
     ) {}
 
-    #[Route('', name: 'list', methods: ['GET'])]
+    #[Route('', name: 'all_order', methods: ['GET'])]
     public function getAllOrders(Request $request): JsonResponse
     {
         $filters = [
@@ -35,7 +35,7 @@ class OrderController extends AbstractController
         return $this->json($result);
     }
 
-    #[Route('/{id}', name: 'get', methods: ['GET'])]
+    #[Route('/{id}', name: 'order_by_id', methods: ['GET'])]
     public function getOrderById(int $id): JsonResponse
     {
         $order = $this->orderService->getOrderById($id);
@@ -44,7 +44,7 @@ class OrderController extends AbstractController
         return $this->json($order);
     }
 
-    #[Route('', name: 'create', methods: ['POST'])]
+    #[Route('', name: 'create_order', methods: ['POST'])]
     public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -52,7 +52,7 @@ class OrderController extends AbstractController
         return $this->json(['id' => $order->getId(), 'name' => $order->getCustomerName()], 201);
     }
 
-    #[Route('/{id}', name: 'update', methods: ['PUT'])]
+    #[Route('/{id}', name: 'update_order', methods: ['PUT'])]
     public function update(Order $order, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -60,14 +60,14 @@ class OrderController extends AbstractController
         return $this->json(['message' => 'Updated']);
     }
 
-    #[Route('/{id}', name: 'delete', methods: ['DELETE'])]
+    #[Route('/{id}', name: 'delete_order', methods: ['DELETE'])]
     public function delete(Order $order): JsonResponse
     {
         $this->orderService->deleteOrder($order);
         return $this->json(['message' => 'Deleted']);
     }
 
-    #[Route('/{id}/status', name: 'status', methods: ['PATCH'])]
+    #[Route('/{id}/status', name: 'status_order', methods: ['PATCH'])]
     public function changeStatus(Order $order, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
