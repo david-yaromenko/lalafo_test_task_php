@@ -49,7 +49,7 @@ class OrderController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         $order = $this->orderService->createOrder($data);
-        return $this->json(['id' => $order->getId()], 201);
+        return $this->json(['id' => $order->getId(), 'name' => $order->getCustomerName()], 201);
     }
 
     #[Route('/{id}', name: 'update', methods: ['PUT'])]

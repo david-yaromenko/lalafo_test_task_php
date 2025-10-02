@@ -16,14 +16,14 @@ class OrderRepository extends ServiceEntityRepository
 
     public function findWithFilters(int $page, int $limit, ?string $status, ?string $dateFrom, ?string $dateTo, ?string $email): array
     {
-        $qb = $this->createQueryBuilder('order');
+        $qb = $this->createQueryBuilder('ord');
 
-        if ($status) $qb->andWhere('order.status = :status')->setParameter('status', $status);
-        if ($dateFrom) $qb->andWhere('order.created_at >= :dateFrom')->setParameter('dateFrom', new \DateTime($dateFrom));
-        if ($dateTo) $qb->andWhere('order.created_at <= :dateTo')->setParameter('dateTo', new \DateTime($dateTo));
-        if ($email) $qb->andWhere('order.customer_email ILIKE :email')->setParameter('email', "%$email%");
+        if ($status) $qb->andWhere('ord.status = :status')->setParameter('status', $status);
+        if ($dateFrom) $qb->andWhere('ord.createdAt >= :dateFrom')->setParameter('dateFrom', new \DateTime($dateFrom));
+        if ($dateTo) $qb->andWhere('ord.createdAt <= :dateTo')->setParameter('dateTo', new \DateTime($dateTo));
+        if ($email) $qb->andWhere('ord.customerEmail ILIKE :email')->setParameter('email', "%$email%");
 
-        $qb->orderBy('order.created_at', 'DESC')
+        $qb->orderBy('ord.createdAt', 'DESC')
            ->setFirstResult(($page - 1) * $limit)
            ->setMaxResults($limit);
 

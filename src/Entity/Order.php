@@ -27,13 +27,13 @@ class Order
     private float $totalAmount;
 
     #[ORM\Column(type: 'string', length: 50)]
-    private OrderStatus $status;
+    private string $status;
 
-    #[ORM\Column(type: "datetime")]
-    private \DateTimeInterface $createdAt;
+    #[ORM\Column(type: "datetime_immutable")]
+    private \DateTimeImmutable $createdAt;
 
-    #[ORM\Column(type: "datetime")]
-    private \DateTimeInterface $updatedAt;
+    #[ORM\Column(type: "datetime_immutable")]
+    private \DateTimeImmutable $updatedAt;
 
     #[ORM\OneToMany(mappedBy: "order", targetEntity: OrderItem::class, cascade: ["persist", "remove"], orphanRemoval: true)]
     private Collection $items;
@@ -41,9 +41,9 @@ class Order
     public function __construct()
     {
         $this->items = new ArrayCollection();
-        $this->createdAt = new \DateTime();
-        $this->updatedAt = new \DateTime();
-        $this->status = OrderStatus::PROCESSING;
+        $this->createdAt = new \DateTimeImmutable();
+        $this->updatedAt = new \DateTimeImmutable();
+        $this->status = "processing";
     }
 
 
@@ -87,12 +87,12 @@ class Order
 
     public function getStatus(): OrderStatus
     {
-        return $this->status;
+        return OrderStatus::from($this->status);;
     }
 
     public function setStatus(OrderStatus $status): self
     {
-        $this->status = $status;
+        $this->status = $status->value;
         return $this;
     }
 
@@ -112,9 +112,9 @@ class Order
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(\DateTimeImmutable $updatedAt): self
+    public function setUpdatedAt(): self
     {
-        $this->updatedAt = $updatedAt;
+        $this->updatedAt = new \DateTimeImmutable();
         return $this;
     }
 
@@ -135,7 +135,6 @@ class Order
     public function removeItem(OrderItem $item): self
     {
         if ($this->items->removeElement($item)) {
-
         }
         return $this;
     }

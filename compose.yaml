@@ -16,6 +16,11 @@
         start_period: 60s
       volumes:
         - database_data:/var/lib/postgresql/data:rw
-
+    mailhog:
+      image: mailhog/mailhog
+      container_name: mailhog
+      ports:
+        - "8025:8025"   # веб-интерфейс для просмотра писем
+        - "1025:1025"   # SMTP для отправки писем
   volumes:
     database_data:

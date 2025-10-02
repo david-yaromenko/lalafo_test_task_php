@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Order;
 use App\Entity\OrderItem;
 use App\Enum\OrderStatus;
+use App\Message\OrderNotificationMessage;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
@@ -94,6 +95,8 @@ class OrderService
         $this->em->persist($order);
         $this->em->flush();
 
+        $this->bus->dispatch(new OrderNotificationMessage($order->getId(), 'created'));
+
         return $order;
     }
 
@@ -121,6 +124,8 @@ class OrderService
         $order->setStatus($orderStatus);
         $order->setUpdatedAt(new \DateTimeImmutable());
         $this->em->flush();
+
+        $this->bus->dispatch(new OrderNotificationMessage($order->getId(), 'status_changed'));
 
         return $order;
     }
