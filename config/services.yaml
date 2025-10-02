@@ -3,12 +3,10 @@ services:
         autowire: true
         autoconfigure: true
 
-    # Messenger handlers
     App\MessageHandler\:
         resource: '../src/MessageHandler'
         tags: ['messenger.message_handler']
 
-    # Остальные сервисы
     App\:
         resource: '../src/'
-        exclude: '../src/{MessageHandler,Entity,Migrations,Tests}'  # исключаем чтобы не перезаписать handlers
+        exclude: '../src/{MessageHandler,Entity,Migrations,Tests}'
