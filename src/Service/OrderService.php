@@ -2,16 +2,19 @@
 
 namespace App\Service;
 
+use App\Dto\CreateOrderDto;
 use App\Entity\Order;
 use App\Entity\OrderItem;
 use App\Enum\OrderStatus;
+use App\Interface\OrderInterface;
 use App\Message\OrderNotificationMessage;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 
 use App\Repository\OrderRepository;
 
-class OrderService
+class OrderService implements OrderInterface
 {
     public function __construct(
         private OrderRepository $orderRepository,
@@ -24,7 +27,7 @@ class OrderService
         $page = $filters['page'] ?? 1;
         $limit = $filters['limit'] ?? 10;
 
-        $ordersData = $this->orderRepository->findWithFilters(
+        $ordersData = $this->findWithFilters(
             $page,
             $limit,
             $filters['status'] ?? null,
@@ -52,8 +55,11 @@ class OrderService
 
     public function getOrderById(int $id): array
     {
-
         $order = $this->orderRepository->find($id);
+
+        if(!$order){
+            throw new \Exception("Order with this id not found");
+        }
 
         $items = [];
         foreach ($order->getItems() as $item) {
@@ -76,24 +82,28 @@ class OrderService
         ];
     }
 
-    public function createOrder(array $data): Order
+    public function createOrder(CreateOrderDto $createOrderDto): Order
     {
-        $order = new Order();
-        $order->setCustomerName($data['customer_name']);
-        $order->setCustomerEmail($data['customer_email']);
-        $order->setTotalAmount($data['total_amount']);
+        $userExist = $this->orderRepository->findBy(['customerEmail' => $createOrderDto->customerEmail]);
 
-        foreach ($data['items'] as $itemData) {
-            $item = new OrderItem();
-            $item->setOrder($order);
-            $item->setProductName($itemData['product_name']);
-            $item->setQuantity($itemData['quantity']);
-            $item->setPrice($itemData['price']);
-            $order->getItems()->add($item);
+        if($userExist){
+            throw new \Exception("User with this email already exists");
         }
 
-        $this->em->persist($order);
-        $this->em->flush();
+        $order = new Order();
+        $order->setCustomerName($createOrderDto->customerName);
+        $order->setCustomerEmail($createOrderDto->customerEmail);
+        $order->setTotalAmount($createOrderDto->totalAmount);
+
+        foreach ($createOrderDto->items as $itemDto) {
+            $item = new OrderItem();
+            $item->setProductName($itemDto['productName']);
+            $item->setQuantity($itemDto['quantity']);
+            $item->setPrice($itemDto['price']);
+            $order->addItem($item);
+        }
+
+        $this->orderRepository->saveOrder($order);
 
         $this->bus->dispatch(new OrderNotificationMessage($order->getId(), 'created'));
 
@@ -128,5 +138,22 @@ class OrderService
         $this->bus->dispatch(new OrderNotificationMessage($order->getId(), 'status_changed'));
 
         return $order;
+    }
+
+        public function findWithFilters(int $page, int $limit, ?string $status, ?string $dateFrom, ?string $dateTo, ?string $email): array
+    {
+        $qb = $this->orderRepository->createQueryBuilder('ord');
+
+        if ($status) $qb->andWhere('ord.status = :status')->setParameter('status', $status);
+        if ($dateFrom) $qb->andWhere('ord.createdAt >= :dateFrom')->setParameter('dateFrom', new \DateTime($dateFrom));
+        if ($dateTo) $qb->andWhere('ord.createdAt <= :dateTo')->setParameter('dateTo', new \DateTime($dateTo));
+        if ($email) $qb->andWhere('LOWER(ord.customerEmail) LIKE LOWER(:email)')->setParameter('email', '%' . strtolower($email) . '%');
+
+        $qb->orderBy('ord.createdAt', 'DESC')
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+
+        $paginator = new Paginator($qb->getQuery(), true);
+        return ['data' => iterator_to_array($paginator), 'total' => count($paginator)];
     }
 }

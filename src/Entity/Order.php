@@ -7,9 +7,11 @@ use App\Enum\OrderStatus;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: OrderRepository::class)]
 #[ORM\Table(name: '`order`')]
+#[UniqueEntity(fields: ['customerEmail'], message: 'This email is already used')]
 class Order
 {
     #[ORM\Id]
@@ -20,7 +22,7 @@ class Order
     #[ORM\Column(type: "string", length: 255)]
     private string $customerName;
 
-    #[ORM\Column(type: "string", length: 255)]
+    #[ORM\Column(type: "string", length: 255, unique:true)]
     private string $customerEmail;
 
     #[ORM\Column(type: "decimal", precision: 12, scale: 2)]
