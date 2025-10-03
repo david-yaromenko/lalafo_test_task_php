@@ -39,7 +39,7 @@ class OrderController extends AbstractController
 
         $result = $this->orderService->getAllOrders($filters);
 
-        if(!$result) return $this->json(['message' => 'No orders found'], 404);
+        if (!$result) return $this->json(['message' => 'No orders found'], 404);
 
         return $this->json($result);
     }
@@ -93,8 +93,15 @@ class OrderController extends AbstractController
     public function update(Order $order, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $this->orderService->updateOrder($order, $data);
-        return $this->json(['message' => 'Updated']);
+        $updateOrder = $this->orderService->updateOrder($order, $data);
+        return $this->json([
+            'message' => 'Updated',
+            'id' => $updateOrder->getId(),
+            'customer_name' => $updateOrder->getCustomerName(),
+            'customer_email' => $updateOrder->getCustomerEmail(),
+            'total_amount' => $updateOrder->getTotalAmount(),
+            'status' => $updateOrder->getStatus(),
+        ]);
     }
 
 
@@ -110,7 +117,11 @@ class OrderController extends AbstractController
     public function changeStatus(Order $order, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $this->orderService->changeStatus($order, $data['status']);
-        return $this->json(['message' => 'Status updated'], 200);
+        $statusChange = $this->orderService->changeStatus($order, $data['status']);
+        return $this->json([
+            'message' => 'Status updated',
+            'id' => $statusChange->getId(),
+            'status' => $statusChange->getStatus(),
+        ], 200);
     }
 }
